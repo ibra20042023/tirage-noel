@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tirage au sort de Noël</title>
+<style>
+:root{--bg:#f2f6f1;--fg:#13271f;--card:#fff;--ac:#a4161a;--on:#fff;--mut:#5a6c63;--bd:#d3dfd5;--ok:#17703f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1d17;--fg:#eef5ef;--card:#16302a;--ac:#ff7a70;--on:#1a0907;--mut:#a3b8ad;--bd:#2c4a40;--ok:#6fd49a}}
+:root[data-theme="dark"]{--bg:#0d1d17;--fg:#eef5ef;--card:#16302a;--ac:#ff7a70;--on:#1a0907;--mut:#a3b8ad;--bd:#2c4a40;--ok:#6fd49a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:30rem;margin:0 auto;padding:1.2rem 1rem 3rem}
+h1,h2,.big{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif}
+h1{font-size:2rem;line-height:1.15;text-align:center;margin:.6rem 0 1.2rem}
+h2{font-size:1.35rem;margin:0 0 .6rem}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:1.1rem;margin:0 0 1rem}
+label{display:block;font-weight:600}
+input,select,textarea{display:block;width:100%;box-sizing:border-box;font:inherit;font-weight:400;padding:.8rem;margin:.35rem 0 .9rem;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg)}
+textarea{min-height:7rem}
+button,.b{display:block;width:100%;box-sizing:border-box;margin:.5rem 0;padding:.9rem;border:0;border-radius:10px;background:var(--ac);color:var(--on);font:inherit;font-weight:700;text-align:center;text-decoration:none;cursor:pointer}
+button:disabled{opacity:.5}
+.s{background:transparent;color:var(--fg);border:1px solid var(--bd)}
+.code{margin:.8rem 0;padding:1rem;border:2px dashed var(--ac);border-radius:10px;text-align:center;font:700 1.7rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;user-select:all}
+.big{margin:.6rem 0;padding:1rem;border-radius:14px;background:var(--ac);color:var(--on);text-align:center;font-size:2rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.m{color:var(--mut);font-size:.93rem}
+.err{color:var(--ac);font-weight:600}
+.ok{color:var(--ok);font-weight:600}
+summary{cursor:pointer}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>🎄 Tirage au sort de Noël</h1>
+
+<section class="c" id="join">
+<h2>Je participe</h2>
+<div id="j1">
+<label>Ton prénom<input id="nm" maxlength="20" autocomplete="given-name" autocapitalize="words"></label>
+<button id="go">Je participe</button>
+</div>
+<div id="j2" hidden>
+<p>Merci <b id="who"></b> ! Voici ton code secret :</p>
+<div class="code" id="cd"></div>
+<p class="err">Fais une capture d’écran maintenant. Sans ce code, tu ne pourras pas découvrir ton cadeau.</p>
+<a class="b" id="wa" target="_blank" rel="noopener">Envoyer ma participation au groupe</a>
+<button class="s" id="cp">Copier le message</button>
+</div>
+</section>
+
+<details class="c" id="run">
+<summary><b>Lancer le tirage</b> (un seul ami, pas l’organisateur)</summary>
+<p class="m">Dans le groupe, copie tous les messages de participation et colle-les ici.</p>
+<textarea id="pa"></textarea>
+<p id="found" class="m"></p>
+<button id="dr" disabled>Lancer le tirage</button>
+<div id="out" hidden>
+<p class="ok">Tirage terminé. Personne ne peut voir le résultat, pas même toi. Envoie-le au groupe :</p>
+<a class="b" id="wa2" target="_blank" rel="noopener">Envoyer le résultat au groupe</a>
+<button class="s" id="cp2">Copier le message</button>
+</div>
+</details>
+
+<section class="c" id="rev" hidden>
+<h2>🎁 Ton cadeau</h2>
+<label>Ton prénom<select id="sel"></select></label>
+<label>Ton code secret<input id="cin" placeholder="XXXX-XXXX-XX" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+<button id="see">Découvrir</button>
+<div id="res"></div>
+</section>
+
+<details class="c" id="ver" hidden>
+<summary><b>Après la fête : vérifier le tirage</b></summary>
+<p class="m">Chacun envoie son code secret dans le groupe. Copie ces messages et colle-les ici : la page contrôle que le tirage était honnête.</p>
+<textarea id="vc"></textarea>
+<button id="vb">Vérifier</button>
+<div id="vr"></div>
+</details>
+
+<details class="c">
+<summary><b>Comment ça marche ?</b></summary>
+<p class="m">Ton code secret est créé sur ton téléphone et n’en sort jamais. Le tirage enferme chaque résultat dans une boîte que seul le code de la personne concernée peut ouvrir. Ni l’organisateur, ni celui qui lance le tirage ne peuvent donc voir qui offre à qui. Après la fête, chacun partage son code et la page vérifie que tout était honnête. Le code de cette page est public : tout le monde peut le lire.</p>
+</details>
+</main>
+
+<script>
+const $=s=>document.querySelector(s),S=crypto.subtle,TE=new TextEncoder(),TD=new TextDecoder();
+const B=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const U=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+const cat=(...a)=>{const o=new Uint8Array(a.reduce((n,x)=>n+x.length,0));let p=0;for(const x of a){o.set(x,p);p+=x.length}return o};
+const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+const rj=n=>{const m=2**32-2**32%n;let x;do x=crypto.getRandomValues(new Uint32Array(1))[0];while(x>=m);return x%n};
+const EC={name:"ECDH",namedCurve:"P-256"},AES={name:"AES-GCM",length:256};
+/* Boîtes de taille fixe : le prénom est complété à 64 octets (1 octet de longueur + prénom + zéros) avant chiffrement */
+const PAD=64,pad=t=>{const b=TE.encode(t),o=new Uint8Array(PAD);o[0]=b.length;o.set(b,1);return o},unpad=b=>TD.decode(b.slice(1,1+b[0]));
+/* Encodage d’URL complet : encodeURIComponent laisse passer ! ' ( ) * que le lecteur de messages ne reconnaît pas */
+const en=s=>encodeURIComponent(s).replace(/[!'()*]/g,c=>"%"+c.charCodeAt(0).toString(16).toUpperCase());
+const AL="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const norm=c=>c.toUpperCase().replace(/[^A-Z0-9]/g,"");
+const mk=()=>{let s="";for(const x of rnd(10))s+=AL[x%31];return s.slice(0,4)+"-"+s.slice(4,8)+"-"+s.slice(8)};
+const kek=async(c,salt)=>S.deriveKey({name:"PBKDF2",salt,iterations:200000,hash:"SHA-256"},await S.importKey("raw",TE.encode(norm(c)),"PBKDF2",false,["deriveKey"]),AES,false,["encrypt","decrypt"]);
+const enc=async(pub,txt)=>{
+ const e=await S.generateKey(EC,true,["deriveKey"]),iv=rnd(12);
+ const k=await S.deriveKey({name:"ECDH",public:await S.importKey("raw",pub,EC,false,[])},e.privateKey,AES,false,["encrypt"]);
+ return cat(new Uint8Array(await S.exportKey("raw",e.publicKey)),iv,new Uint8Array(await S.encrypt({name:"AES-GCM",iv},k,pad(txt))));
+};
+const dec=async(sk,b)=>{
+ const k=await S.deriveKey({name:"ECDH",public:await S.importKey("raw",b.slice(0,65),EC,false,[])},sk,AES,false,["decrypt"]);
+ return unpad(new Uint8Array(await S.decrypt({name:"AES-GCM",iv:b.slice(65,77)},k,b.slice(77))));
+};
+const unlock=async(e,code)=>S.importKey("pkcs8",await S.decrypt({name:"AES-GCM",iv:e.w.slice(16,28)},await kek(code,e.w.slice(0,16)),e.w.slice(28)),EC,false,["deriveKey"]);
+
+const BASE=location.href.split("#")[0];
+const cl=s=>s.trim().replace(/[.~#%\s]+/g," ").trim();
+let mJ="",mR="";
+const wa=(id,t)=>{$(id).href="https://wa.me/?text="+encodeURIComponent(t)};
+const cp=(id,f)=>{$(id).onclick=async()=>{try{await navigator.clipboard.writeText(f())}catch{prompt("Copie ce message :",f())}$(id).textContent="Copié ✓"}};
+
+/* 1. Inscription */
+$("#go").onclick=async()=>{
+ const n=cl($("#nm").value);if(!n){$("#nm").focus();return}
+ const b=$("#go");b.disabled=true;b.textContent="Un instant…";
+ const k=await S.generateKey(EC,true,["deriveKey"]),code=mk(),salt=rnd(16),iv=rnd(12);
+ const pub=new Uint8Array(await S.exportKey("raw",k.publicKey)),pk=new Uint8Array(await S.exportKey("pkcs8",k.privateKey));
+ const w=new Uint8Array(await S.encrypt({name:"AES-GCM",iv},await kek(code,salt),pk));
+ mJ="🎄 "+n+" participe au tirage de Noël !\n"+BASE+"#j="+en(n)+"."+B(pub)+"."+B(cat(salt,iv,w));
+ $("#who").textContent=n;$("#cd").textContent=code;wa("#wa",mJ);
+ $("#j1").hidden=true;$("#j2").hidden=false;
+};
+cp("#cp",()=>mJ);
+
+/* 2. Tirage (jamais affiché) */
+const toks=s=>[...s.matchAll(/#j=([A-Za-z0-9%._-]+)/g)].map(m=>m[1]);
+const rd=()=>{
+ const P=[],v=$("#pa").value;
+ for(const t of toks(v)){try{const[n,p,w]=t.split("."),q=U(p);if(q.length!=65||!w)throw 0;P.push({n:decodeURIComponent(n),p:q,w})}catch{}}
+ const L=P.map(x=>x.n.toLowerCase());
+ return{P,bad:(v.match(/#j=/g)||[]).length-P.length,d:P.find((x,i)=>L.indexOf(x.n.toLowerCase())!=i)};
+};
+$("#pa").oninput=()=>{
+ const{P,d,bad}=rd(),f=$("#found");
+ f.className=bad>0||d||P.length<3?"m err":"m ok";
+ f.textContent=bad>0?bad+" message(s) illisible(s) : recopie chaque message en entier, avec son lien.":d?"« "+d.n+" » apparaît deux fois : supprime un des deux messages.":P.length<3?"Participants trouvés : "+P.length+". Il en faut au moins 3.":P.length+" participants : "+P.map(x=>x.n).join(", ");
+ $("#dr").disabled=bad>0||!!d||P.length<3;
+};
+$("#dr").onclick=async()=>{
+ const{P}=rd(),b=$("#dr");b.disabled=true;b.textContent="Tirage en cours…";
+ const o=P.map((_,i)=>i);
+ for(let i=o.length-1;i>0;i--){const j=rj(i+1);[o[i],o[j]]=[o[j],o[i]]}
+ const to=[];o.forEach((g,k)=>{to[g]=o[(k+1)%o.length]});
+ const R=[];
+ for(let i=0;i<P.length;i++)R.push(en(P[i].n)+"."+P[i].w+"."+B(await enc(P[i].p,P[to[i]].n)));
+ mR="🎁 Le tirage est fait ! Ouvre ce lien pour découvrir à qui tu offres un cadeau (il te faudra ton code secret) :\n"+BASE+"#r="+R.join("~");
+ wa("#wa2",mR);$("#pa").value="";$("#found").textContent="";b.hidden=true;$("#out").hidden=false;
+};
+cp("#cp2",()=>mR);
+
+/* 3. Découverte + 4. Vérification */
+let RR=null;
+try{if(location.hash.startsWith("#r="))RR=location.hash.slice(3).split("~").map(e=>{const[n,w,b]=e.split(".");return{n:decodeURIComponent(n),w:U(w),b:U(b)}})}catch{}
+if(RR){
+ $("#join").hidden=$("#run").hidden=true;$("#rev").hidden=$("#ver").hidden=false;
+ RR.forEach((e,i)=>$("#sel").add(new Option(e.n,i)));
+}
+addEventListener("hashchange",()=>location.reload());
+
+$("#see").onclick=async()=>{
+ const e=RR[$("#sel").value],r=$("#res"),b=$("#see");b.disabled=true;b.textContent="Un instant…";
+ try{
+  const t=await dec(await unlock(e,$("#cin").value),e.b);
+  r.innerHTML='<p class="m" style="text-align:center;margin:1rem 0 0">Tu offres un cadeau à</p><div class="big"></div><p class="m" style="text-align:center">Chut… garde le secret jusqu’à la fête !</p>';
+  r.querySelector(".big").textContent="🎁 "+t;
+ }catch{r.innerHTML='<p class="err">Ce code ne correspond pas à ce prénom. Vérifie ta capture d’écran et réessaie.</p>'}
+ b.disabled=false;b.textContent="Découvrir";
+};
+
+$("#vb").onclick=async()=>{
+ const cs=[...new Set(($("#vc").value.match(/[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{2}/g)||[]).map(norm))],v=$("#vr"),b=$("#vb");
+ b.disabled=true;b.textContent="Vérification… (patience)";v.textContent="";
+ const names=RR.map(e=>e.n),r=[],add=(cls,t)=>{const p=document.createElement("p");p.className=cls;p.textContent=t;v.append(p)};
+ try{
+  for(const e of RR){
+   let t=null;
+   for(const c of cs){try{t=await dec(await unlock(e,c),e.b);break}catch{}}
+   if(t===null)throw e.n;
+   r.push(names.indexOf(t));
+  }
+  const n=r.length,c1=new Set(r).size==n&&r.every(x=>x>=0),c2=r.every((x,i)=>x!=i);
+  let c3=false;if(c1){let k=0,c=0;do{k=r[k];c++}while(k!=0);c3=c==n}
+  [[c1,"Chacun offre un cadeau et en reçoit un, ni plus ni moins"],[c2,"Personne ne s’offre un cadeau à soi-même"],[c3,"Un seul grand cercle : aucun échange à deux"]].forEach(([f,t])=>add(f?"ok":"err",(f?"✓ ":"✗ ")+t));
+  add("m","Tirage complet : "+r.map((x,i)=>names[i]+" → "+(names[x]||"?")).join(" ; "));
+ }catch(x){add("err",typeof x=="string"?"Impossible d’ouvrir le cadeau de « "+x+" » : son code manque ou est incorrect.":"Vérification impossible : lien ou codes invalides.")}
+ b.disabled=false;b.textContent="Vérifier";
+};
+</script>
+</body>
+</html>
